@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
 
-    "name": "imap-mail-checker-chrome-extension",
+    "name": "IMAP Mail Checker",
     "description": "",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "icons": {
       "128": "icon_128.png"
     },
