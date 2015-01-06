@@ -1,0 +1,50 @@
+<!doctype html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
+    <style>
+        body {min-width: 300px;}
+
+    </style>
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/jsencrypt.min.js"></script>
+    <script src="js/option.js"></script>
+</head>
+<body>
+<br />
+<div class="container">
+    <div class="form-group">
+        <label for="id">IMAP Server</label>
+        <input type="text" class="form-control" id="imap_server" placeholder="Enter IMAP Server">
+    </div>
+    <div class="form-group">
+        <label for="id">Port</label>
+        <input type="text" class="form-control" id="imap_port" placeholder="Enter Port" value="993">
+    </div>
+    <div class="form-group">
+        <label for="id">TLS</label>
+        <select class="form-control" id="imap_tls">
+            <option value="true">TRUE</option>
+            <option value="false">FALSE</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="id">Username</label>
+        <input type="email" class="form-control" id="id" placeholder="Enter Username">
+    </div>
+    <div class="form-group">
+        <label for="pw">Password</label>
+        <input type="password" class="form-control" id="pw" placeholder="Password">
+    </div>
+    <div class="form-group">
+        <label for="pw">Enter WebMail Url</label>
+        <input type="text" class="form-control" id="mail_url" placeholder="ex) http://mail.daum.net">
+    </div>
+    <button class="btn btn-default btnSave">저장</button>
+</div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+    "manifest_version": 2,
+
+    "name": "imap-mail-checker-chrome-extension",
+    "description": "",
+    "version": "1.0.4",
+    "icons": {
+      "128": "icon_128.png"
+    },
+    "permissions": [
+        "alarms",
+        "storage",
+        "notifications",
+        "tabs",
+        "http://*/",
+        "https://*/"
+    ],
+    "options_page": "option.html",
+    "background": {
+      "persistent": true,
+      "page": "background.html"
+    },
+    "browser_action": {
+        "default_icon": {
+            "38": "daummail_not_logged_in.png"
+        }
+    }
+}
