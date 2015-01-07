@@ -25,7 +25,8 @@ function login() {
     }
 
     // 소켓초기화
-    socket = io('https://imap-mail-checker.herokuapp.com', {'forceNew': true, 'reconnection': false});
+    //socket = io('https://imap-mail-checker.herokuapp.com', {'forceNew': true, 'reconnection': false});
+    socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
     socket.on('connect', cbConnect);
     socket.on('error', cbError);
     socket.on('login_success', cbLoginSuccess);
