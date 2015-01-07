@@ -64,7 +64,6 @@ function cbUnseenResult(data) {
     }
 
     // 재요청.
-    window.clearTimeout(repeatTimer);
     repeatTimer = window.setTimeout(function() {
         socket.emit('unseen');
     }, 10000);
@@ -91,7 +90,7 @@ function cbServerError(data) {
 function cbDisconnect(data) {
     console.log('disconnect!');
     console.log(data);
-    window.clearTimeout(repeatTimer);
+    try { window.clearTimeout(repeatTimer); } catch(e){}
     chrome.browserAction.setIcon({path:"daummail_not_logged_in.png"});
     chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
     chrome.browserAction.setBadgeText({text:"?"});
@@ -105,6 +104,7 @@ function cbDisconnect(data) {
 }
 
 function login() {
+    try { window.clearTimeout(repeatTimer); } catch(e) {}
     chrome.storage.local.get(['id', 'pw', 'imap_server', 'imap_port', 'imap_tls'], function(result) {
         console.log(result);
         if (!result.id || !result.pw || !result.imap_server || !result.imap_port || !result.imap_tls) {
