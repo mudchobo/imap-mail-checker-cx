@@ -6,7 +6,7 @@ function init(details) {
 }
 
 function initSocket() {
-    socket = io('http://127.0.0.1:8888', {'forceNew': true});
+    socket = io('https://127.0.0.1:8888', {'forceNew': true, 'reconnection': false});
     console.log(socket);
     socket.on('connect', cbConnect);
     socket.on('error', cbError);
@@ -25,6 +25,9 @@ function cbConnect(data) {
 function cbError(data) {
     console.log('error!');
     console.log(data);
+    
+    // 다시 로그인 시도.
+    login();
 }
 
 function cbLoginSuccess(data) {
@@ -96,11 +99,9 @@ function cbDisconnect(data) {
     chrome.browserAction.setBadgeText({text:"?"});
 
     // 서버에서 끊어진 경우 소켓 다시 초기화.
-    if (data == 'io server disconnect') {
-        setTimeout(function() {
-            initSocket();
-        }, 3000);
-    }
+    setTimeout(function() {
+        initSocket();
+    }, 3000);
 }
 
 function login() {
