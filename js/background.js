@@ -9,13 +9,23 @@ function login() {
     try {
         // 이전 반복 요청 삭제 및 소켓 연결 해제.
         window.clearTimeout(repeatTimer);
-        socket.disconnect();
+        // 이벤트 해제.
+        if (socket) {
+            socket.removeAllListeners('connect');
+            socket.removeAllListeners('error');
+            socket.removeAllListeners('login_success');
+            socket.removeAllListeners('unseen_result');
+            socket.removeAllListeners('mail_info_result');
+            socket.removeAllListeners('server_error');
+            socket.removeAllListeners('disconnect');
+            socket.disconnect();
+        }
     } catch(e) {
         console.log(e);
     }
 
     // 소켓초기화
-    socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
+    socket = io('https://imap-mail-checker.herokuapp.com', {'forceNew': true, 'reconnection': false});
     socket.on('connect', cbConnect);
     socket.on('error', cbError);
     socket.on('login_success', cbLoginSuccess);
