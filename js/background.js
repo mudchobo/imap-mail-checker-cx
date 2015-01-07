@@ -2,12 +2,20 @@
 var socket;
 var repeatTimer;
 function init(details) {
-    initSocket();
+    login();
 }
 
-function initSocket() {
-    socket = io('https://127.0.0.1:8888', {'forceNew': true, 'reconnection': false});
-    console.log(socket);
+function login() {
+    try {
+        // 이전 반복 요청 삭제 및 소켓 연결 해제.
+        window.clearTimeout(repeatTimer);
+        socket.disconnect();
+    } catch(e) {
+        console.log(e);
+    }
+
+    // 소켓초기화
+    socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
     socket.on('connect', cbConnect);
     socket.on('error', cbError);
     socket.on('login_success', cbLoginSuccess);
@@ -15,11 +23,19 @@ function initSocket() {
     socket.on('mail_info_result', cbMailInfoResult);
     socket.on('server_error', cbServerError);
     socket.on('disconnect', cbDisconnect);
+    console.log(socket);
 }
 
 function cbConnect(data) {
     console.log('connection!');
-    login();
+
+    chrome.storage.local.get(['id', 'pw', 'imap_server', 'imap_port', 'imap_tls'], function(result) {
+        console.log(result);
+        if (!result.id || !result.pw || !result.imap_server || !result.imap_port || !result.imap_tls) {
+            return;
+        }
+        socket.emit('login', {id:result.id, pw:result.pw, imap_server:result.imap_server, imap_port:result.imap_port, imap_tls:result.imap_tls});
+    });
 }
 
 function cbError(data) {
@@ -98,21 +114,10 @@ function cbDisconnect(data) {
     chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
     chrome.browserAction.setBadgeText({text:"?"});
 
-    // 서버에서 끊어진 경우 소켓 다시 초기화.
+    // 서버에서 끊어진 경우 다시 로그인.
     setTimeout(function() {
-        initSocket();
+        login();
     }, 3000);
-}
-
-function login() {
-    try { window.clearTimeout(repeatTimer); } catch(e) {}
-    chrome.storage.local.get(['id', 'pw', 'imap_server', 'imap_port', 'imap_tls'], function(result) {
-        console.log(result);
-        if (!result.id || !result.pw || !result.imap_server || !result.imap_port || !result.imap_tls) {
-            return;
-        }
-        socket.emit('login', {id:result.id, pw:result.pw, imap_server:result.imap_server, imap_port:result.imap_port, imap_tls:result.imap_tls});
-    });
 }
 
 // 메일 노티와 확장버튼 클릭 시
