@@ -12,6 +12,8 @@ function login() {
         // 이벤트 해제.
         if (socket) {
             socket.removeAllListeners('connect');
+            socket.removeAllListeners('connect_failed');
+            socket.removeAllListeners('connect_timeout');
             socket.removeAllListeners('error');
             socket.removeAllListeners('login_success');
             socket.removeAllListeners('unseen_result');
@@ -25,9 +27,11 @@ function login() {
     }
 
     // 소켓초기화
-    //socket = io('https://imap-mail-checker.herokuapp.com', {'forceNew': true, 'reconnection': false});
-    socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
+    socket = io('https://imap-mail-checker.herokuapp.com', {'forceNew': true, 'reconnection': false, 'timeout': 5000});
+    //socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
     socket.on('connect', cbConnect);
+    socket.on('connect_failed', cbConnectFail);
+    socket.on('connect_timeout', cbConnectTimeout);
     socket.on('error', cbError);
     socket.on('login_success', cbLoginSuccess);
     socket.on('unseen_result', cbUnseenResult);
@@ -47,6 +51,22 @@ function cbConnect(data) {
         }
         socket.emit('login', {id:result.id, pw:result.pw, imap_server:result.imap_server, imap_port:result.imap_port, imap_tls:result.imap_tls});
     });
+}
+
+function cbConnectFail() {
+    console.log('connect fail!');
+    // 서버에서 끊어진 경우 소켓 다시 초기화.
+    setTimeout(function() {
+        login();
+    }, 3000);   
+}
+
+function cbConnectTimeout() {
+    console.log('connect timeout!');
+    // 연결 타임아웃인 경우 다시 연결.
+    setTimeout(function() {
+        login();
+    }, 3000);
 }
 
 function cbError(data) {
