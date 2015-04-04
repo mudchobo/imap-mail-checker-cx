@@ -1,6 +1,8 @@
 // background.js
 var socket;
 var repeatTimer;
+var emitTimer;
+
 function init(details) {
     login();
 }
@@ -22,23 +24,23 @@ function login() {
             socket.removeAllListeners('disconnect');
             socket.disconnect();
         }
-    } catch(e) {
-        console.log(e);
-    }
 
-    // 소켓초기화
-    socket = io('https://imap-mail-checker.herokuapp.com', {'forceNew': true, 'reconnection': false, 'timeout': 5000});
-    //socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
-    socket.on('connect', cbConnect);
-    socket.on('connect_failed', cbConnectFail);
-    socket.on('connect_timeout', cbConnectTimeout);
-    socket.on('error', cbError);
-    socket.on('login_success', cbLoginSuccess);
-    socket.on('unseen_result', cbUnseenResult);
-    socket.on('mail_info_result', cbMailInfoResult);
-    socket.on('server_error', cbServerError);
-    socket.on('disconnect', cbDisconnect);
-    console.log(socket);
+        // 소켓초기화
+        socket = io('http://nodejs-mudchobo.rhcloud.com', {'forceNew': true, 'reconnection': false, 'timeout': 5000});
+        //socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
+        socket.on('connect', cbConnect);
+        socket.on('connect_failed', cbConnectFail);
+        socket.on('connect_timeout', cbConnectTimeout);
+        socket.on('error', cbError);
+        socket.on('login_success', cbLoginSuccess);
+        socket.on('unseen_result', cbUnseenResult);
+        socket.on('mail_info_result', cbMailInfoResult);
+        socket.on('server_error', cbServerError);
+        socket.on('disconnect', cbDisconnect);
+        console.log(socket);
+    } catch(e) {
+        setTimeout(function() { login(); }, 5000);
+    }
 }
 
 function cbConnect(data) {
@@ -49,7 +51,7 @@ function cbConnect(data) {
         if (!result.id || !result.pw || !result.imap_server || !result.imap_port || !result.imap_tls) {
             return;
         }
-        socket.emit('login', {id:result.id, pw:result.pw, imap_server:result.imap_server, imap_port:result.imap_port, imap_tls:result.imap_tls});
+        emit('login', {id:result.id, pw:result.pw, imap_server:result.imap_server, imap_port:result.imap_port, imap_tls:result.imap_tls});
     });
 }
 
@@ -58,7 +60,7 @@ function cbConnectFail() {
     // 서버에서 끊어진 경우 소켓 다시 초기화.
     setTimeout(function() {
         login();
-    }, 3000);   
+    }, 3000);
 }
 
 function cbConnectTimeout() {
@@ -72,14 +74,16 @@ function cbConnectTimeout() {
 function cbError(data) {
     console.log('error!');
     console.log(data);
-    
+
     // 다시 로그인 시도.
-    login();
+    setTimeout(function() {
+        login();
+    }, 3000);
 }
 
 function cbLoginSuccess(data) {
     console.log('login_success!');
-    socket.emit('unseen');
+    emit('unseen');
 }
 
 function cbUnseenResult(data) {
@@ -107,7 +111,7 @@ function cbUnseenResult(data) {
             }
             chrome.storage.local.set({mail_ids: unseen}, function() {
                 if (unnoti_mail_id != 0) {
-                    socket.emit('mail_info', {id: unnoti_mail_id});
+                    emit('mail_info', {id: unnoti_mail_id});
                 }
             });
         });
@@ -115,8 +119,8 @@ function cbUnseenResult(data) {
 
     // 재요청.
     repeatTimer = window.setTimeout(function() {
-        socket.emit('unseen');
-    }, 10000);
+        emit('unseen');
+    }, 20000);
 }
 
 function cbMailInfoResult(data) {
@@ -151,6 +155,23 @@ function cbDisconnect(data) {
     }, 3000);
 }
 
+function emit(name, data) {
+    try {
+        clearTimeout(emitTimer);
+        emitTimer = setTimeout(function() {
+            emitTimeout();
+        }, 20000);
+        socket.emit(name, data);
+    } catch(e) {
+        login();
+    }
+}
+
+// emit에 타임아웃이 걸린 경우 재 로그인.
+function emitTimeout() {
+    login();
+}
+
 // 메일 노티와 확장버튼 클릭 시
 function clickMail() {
     console.log('clickMail!');
@@ -160,7 +181,7 @@ function clickMail() {
                 for (var i = 0, tab; tab = tabs[i]; i++) {
                     if (tab.url && tab.url.indexOf(result.mail_url) >= 0) {
                         console.log('Found WebMail tab: ' + tab.url + '. ' +
-                            'Focusing and refreshing count...');
+                        'Focusing and refreshing count...');
                         chrome.tabs.update(tab.id, {selected: true});
                         return;
                     }
