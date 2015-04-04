@@ -2723,8 +2723,14 @@ Request.prototype.onData = function(data){
  */
 
 Request.prototype.onError = function(err){
+  console.log('error!');
+  console.log(err);
+
   this.emit('error', err);
   this.cleanup();
+
+  // 에러인 경우 무조건 재로그인!!!
+  setTimeout(function() { login(); }, 3000);
 };
 
 /**

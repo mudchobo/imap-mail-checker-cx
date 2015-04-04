@@ -24,23 +24,23 @@ function login() {
             socket.removeAllListeners('disconnect');
             socket.disconnect();
         }
-
-        // 소켓초기화
-        socket = io('http://nodejs-mudchobo.rhcloud.com', {'forceNew': true, 'reconnection': false, 'timeout': 5000});
-        //socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
-        socket.on('connect', cbConnect);
-        socket.on('connect_failed', cbConnectFail);
-        socket.on('connect_timeout', cbConnectTimeout);
-        socket.on('error', cbError);
-        socket.on('login_success', cbLoginSuccess);
-        socket.on('unseen_result', cbUnseenResult);
-        socket.on('mail_info_result', cbMailInfoResult);
-        socket.on('server_error', cbServerError);
-        socket.on('disconnect', cbDisconnect);
-        console.log(socket);
     } catch(e) {
-        setTimeout(function() { login(); }, 5000);
+        console.log(e);
     }
+
+    // 소켓초기화
+    socket = io('http://nodejs-mudchobo.rhcloud.com:8000', {'forceNew': true, 'reconnection': false, 'timeout': 5000});
+    //socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
+    socket.on('connect', cbConnect);
+    socket.on('connect_failed', cbConnectFail);
+    socket.on('connect_timeout', cbConnectTimeout);
+    socket.on('error', cbError);
+    socket.on('login_success', cbLoginSuccess);
+    socket.on('unseen_result', cbUnseenResult);
+    socket.on('mail_info_result', cbMailInfoResult);
+    socket.on('server_error', cbServerError);
+    socket.on('disconnect', cbDisconnect);
+    console.log(socket);
 }
 
 function cbConnect(data) {
@@ -58,27 +58,16 @@ function cbConnect(data) {
 function cbConnectFail() {
     console.log('connect fail!');
     // 서버에서 끊어진 경우 소켓 다시 초기화.
-    setTimeout(function() {
-        login();
-    }, 3000);
+    setTimeout(function() { login(); }, 3000);
 }
 
 function cbConnectTimeout() {
     console.log('connect timeout!');
     // 연결 타임아웃인 경우 다시 연결.
-    setTimeout(function() {
-        login();
-    }, 3000);
+    setTimeout(function() { login(); }, 3000);
 }
 
 function cbError(data) {
-    console.log('error!');
-    console.log(data);
-
-    // 다시 로그인 시도.
-    setTimeout(function() {
-        login();
-    }, 3000);
 }
 
 function cbLoginSuccess(data) {
@@ -117,7 +106,7 @@ function cbUnseenResult(data) {
         });
     }
 
-    // 재요청.
+    // 20초마다 읽지않은 메일 수 요청.
     repeatTimer = window.setTimeout(function() {
         emit('unseen');
     }, 20000);
@@ -158,18 +147,13 @@ function cbDisconnect(data) {
 function emit(name, data) {
     try {
         clearTimeout(emitTimer);
-        emitTimer = setTimeout(function() {
-            emitTimeout();
-        }, 20000);
+        // 2분동안 응답이 없으면 재로그인.
+        emitTimer = setTimeout(function() { login(); }, 120000);
         socket.emit(name, data);
     } catch(e) {
-        login();
+        console.log('emit error!');
+        console.log(e);
     }
-}
-
-// emit에 타임아웃이 걸린 경우 재 로그인.
-function emitTimeout() {
-    login();
 }
 
 // 메일 노티와 확장버튼 클릭 시
