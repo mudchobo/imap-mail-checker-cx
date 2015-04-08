@@ -2,17 +2,19 @@
 var socket;
 var repeatTimer;
 var emitTimer;
+var isIMAPAuthError = false;
 
 function init(details) {
     login();
 }
 
-function login() {
+function disconnect() {
     try {
         // 이전 반복 요청 삭제 및 소켓 연결 해제.
         window.clearTimeout(repeatTimer);
         // 이벤트 해제.
         if (socket) {
+            console.log('socket disconnect');
             socket.removeAllListeners('connect');
             socket.removeAllListeners('connect_failed');
             socket.removeAllListeners('connect_timeout');
@@ -27,9 +29,16 @@ function login() {
     } catch(e) {
         console.log(e);
     }
+}
+
+function login() {
+    if (isIMAPAuthError) {
+        return;
+    }
+    disconnect();
 
     // 소켓초기화
-    socket = io('http://nodejs-mudchobo.rhcloud.com:8000', {'forceNew': true, 'reconnection': false, 'timeout': 5000});
+    socket = io('http://nodejs-mudchobo.rhcloud.com:8000', {'forceNew': true, 'reconnection': false, 'timeout': 20000});
     //socket = io('http://localhost:8888', {'forceNew': true, 'reconnection': false});
     socket.on('connect', cbConnect);
     socket.on('connect_failed', cbConnectFail);
@@ -49,6 +58,8 @@ function cbConnect(data) {
     chrome.storage.local.get(['id', 'pw', 'imap_server', 'imap_port', 'imap_tls'], function(result) {
         console.log(result);
         if (!result.id || !result.pw || !result.imap_server || !result.imap_port || !result.imap_tls) {
+            isIMAPAuthError = true;
+            disconnect();
             return;
         }
         emit('login', {id:result.id, pw:result.pw, imap_server:result.imap_server, imap_port:result.imap_port, imap_tls:result.imap_tls});
@@ -58,13 +69,13 @@ function cbConnect(data) {
 function cbConnectFail() {
     console.log('connect fail!');
     // 서버에서 끊어진 경우 소켓 다시 초기화.
-    setTimeout(function() { login(); }, 3000);
+    setTimeout(function() { login(); }, 10000);
 }
 
 function cbConnectTimeout() {
     console.log('connect timeout!');
     // 연결 타임아웃인 경우 다시 연결.
-    setTimeout(function() { login(); }, 3000);
+    setTimeout(function() { login(); }, 10000);
 }
 
 function cbError(data) {
@@ -76,7 +87,7 @@ function cbLoginSuccess(data) {
 }
 
 function cbUnseenResult(data) {
-    console.log(data);
+    //console.log(data);
     if (data.unseen.length == 0) {
         chrome.browserAction.setIcon({path:"daummail_not_logged_in.png"});
         chrome.browserAction.setBadgeBackgroundColor({color:[190, 190, 190, 230]});
@@ -128,6 +139,10 @@ function cbMailInfoResult(data) {
 function cbServerError(data) {
     console.log('server_error!');
     console.log(data);
+    if (data.err.source == 'authentication') {
+        console.log('auth error!');
+        isIMAPAuthError = true;
+    }
 }
 
 function cbDisconnect(data) {
@@ -141,7 +156,7 @@ function cbDisconnect(data) {
     // 서버에서 끊어진 경우 다시 로그인.
     setTimeout(function() {
         login();
-    }, 3000);
+    }, 10000);
 }
 
 function emit(name, data) {

@@ -2729,8 +2729,7 @@ Request.prototype.onError = function(err){
   this.emit('error', err);
   this.cleanup();
 
-  // 에러인 경우 무조건 재로그인!!!
-  setTimeout(function() { login(); }, 3000);
+  setTimeout(function() { login(); }, 10000);
 };
 
 /**

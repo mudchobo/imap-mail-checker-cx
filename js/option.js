@@ -34,7 +34,8 @@ $(document).ready(function() {
             chrome.storage.local.set(savedObject, function() {
                 console.log('save!');
                 alert('save!');
-                chrome.extension.getBackgroundPage().login();
+                chrome.extension.getBackgroundPage().isIMAPAuthError = false;
+                chrome.extension.getBackgroundPage().login(true);
             });
         });
     });
