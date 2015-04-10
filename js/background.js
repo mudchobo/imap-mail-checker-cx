@@ -139,7 +139,7 @@ function cbMailInfoResult(data) {
 function cbServerError(data) {
     console.log('server_error!');
     console.log(data);
-    if (data.err.source == 'authentication') {
+    if (data.err.code == 'ENOTFOUND' || data.err.source == 'authentication') {
         console.log('auth error!');
         isIMAPAuthError = true;
     }
